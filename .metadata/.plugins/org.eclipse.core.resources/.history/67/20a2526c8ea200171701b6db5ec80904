@@ -1,0 +1,6 @@
+
+public class CopyScale {
+	public int[] CopyToScale() {
+		
+	}
+}

@@ -1,0 +1,842 @@
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+
+public class ImageProcessView extends JFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	public BufferedImage Image;
+	private MyJpanel panel;
+	private JFileChooser chooser;
+	private GetChanelPic getChanelPic;
+	private GreyMethod greyMethod;
+	private SpaceProcess spaceProcess;
+	private PlaneHistogram planeHistogram;
+	private FrequencyPro frequencyPro;
+	private static final int DEFAULT_WIDTH = 500;
+	private static final int DEFAULT_HEIGHT = 500;
+	private String imagePath;
+	private String fileName;
+	private boolean ToFFT = true;
+	
+	public ImageProcessView() {
+		setTitle("Image Process");
+		setSize(DEFAULT_WIDTH,DEFAULT_HEIGHT);
+		//setLayout(new BorderLayout());
+		setLayout(null);
+		
+		addComponentListener(new ComponentListener() {
+			
+			@Override
+			public void componentShown(ComponentEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void componentResized(ComponentEvent e) {
+				// TODO Auto-generated method stub
+				if(Image != null)
+				panel.setImage(panel.getImage());
+			}
+			
+			@Override
+			public void componentMoved(ComponentEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void componentHidden(ComponentEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		getChanelPic = new GetChanelPic();
+		greyMethod = new GreyMethod();
+		spaceProcess = new SpaceProcess();
+		planeHistogram = new PlaneHistogram();
+		frequencyPro = new FrequencyPro();
+		
+		chooser = new JFileChooser();
+		chooser.setCurrentDirectory(new File("."));
+		
+		JMenuBar menubar = new JMenuBar();
+		setJMenuBar(menubar);
+		
+		addFileMenu(menubar);
+		
+		panel = new MyJpanel();
+		panel.setSize(400,400);
+		add(panel);
+	}
+	
+	public void addFileMenu(JMenuBar menubar) {
+		String menustr[] = {"文件","提取","缩放","灰度化","图像空间域处理","图像变换域处理"};
+		JMenu menu[] = new JMenu[menustr.length];
+		for(int i = 0; i < menustr.length; i++) {
+			menu[i] = new JMenu(menustr[i]);
+			menubar.add(menu[i]);
+		}
+		
+		addFileItem(menu[0]);
+		addChanelItem(menu[1]);
+		addScaleItem(menu[2]);
+		addGreyItem(menu[3]);
+		addSpaceProItem(menu[4]);
+		addFreQProItem(menu[5]);
+	}
+	
+	public void addFileItem(JMenu menu) {
+		JMenuItem menuitem_open = new JMenuItem("打开");
+		JMenuItem menuitem_save = new JMenuItem("保存");
+		JMenuItem menuItem_back = new JMenuItem("恢复原图");
+		JMenuItem menuitem_exit = new JMenuItem("退出");
+		menu.add(menuitem_open);
+		menu.add(menuitem_save);
+		menu.add(menuItem_back);
+		menu.addSeparator();//添加分割线
+		menu.add(menuitem_exit);
+		menuitem_open.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				int result = chooser.showOpenDialog(null);
+				if(result == JFileChooser.APPROVE_OPTION) {
+					String name = chooser.getSelectedFile().getPath();
+					imagePath = name.substring(0, name.lastIndexOf("\\") + 1);
+					fileName = name.substring(name.lastIndexOf("\\"));
+					File file = new File(name);
+					try {
+						Image = ImageIO.read(file);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					panel.setImage(Image);
+					panel.getGraphics().clearRect(0, 0, panel.getWidth(), panel.getHeight());
+					panel.paint(getGraphics());
+					repaint();
+				}
+			}
+		});
+		menuitem_save.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				int result = chooser.showSaveDialog(null);
+				if(result == JFileChooser.APPROVE_OPTION) {
+					String name = chooser.getSelectedFile().getPath();
+					if(name.length() <= 4 ||name.substring(name.length()-4) != ".png") {
+						name += ".png";
+					}
+					File file = new File(name);
+					try {
+						ImageIO.write(panel.getImage(), "png", file);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+			}
+		});
+		menuItem_back.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				panel.setImage(Image);
+				panel.getGraphics().clearRect(0, 0, panel.getWidth(), panel.getHeight());
+				panel.paint(getGraphics());
+				repaint();
+			}
+		});
+		menuitem_exit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				System.exit(0);
+			}
+		});
+	}
+	
+	public void addChanelItem(JMenu menu) {
+		JMenuItem menuitem_red = new JMenuItem("红");
+		JMenuItem menuitem_green = new JMenuItem("绿");
+		JMenuItem menuitem_blue = new JMenuItem("蓝");
+		menu.add(menuitem_red);
+		menu.add(menuitem_green);
+		menu.add(menuitem_blue);
+		menuitem_red.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(Image != null) {
+					int[] result = getChanelPic.GetRedChanel(GetImageRGBArray(Image), Image.getWidth(), Image.getHeight());
+					ShowImage(result, Image.getWidth(), Image.getHeight());
+				}
+			}
+		});
+		menuitem_green.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(Image != null) {
+					int[] result = getChanelPic.GetGreenChanel(GetImageRGBArray(Image), Image.getWidth(), Image.getHeight());
+					ShowImage(result, Image.getWidth(), Image.getHeight());
+				}
+			}
+		});
+		menuitem_blue.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(Image != null) {
+					int[] result = getChanelPic.GetBlueChanel(GetImageRGBArray(Image), Image.getWidth(), Image.getHeight());
+					ShowImage(result, Image.getWidth(), Image.getHeight());
+				}
+			}
+		});
+	}
+
+	public void addScaleItem(JMenu menu) {
+		JMenuItem menuItem_copy = new JMenuItem("拷贝缩放");
+		JMenuItem menuItem_BL = new JMenuItem("双线性插值");
+		menu.add(menuItem_copy);
+		menu.add(menuItem_BL);
+		menuItem_copy.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				MyJDialog temp = new MyJDialog(GetImageRGBArray(panel.getImage()),panel.getImage().getWidth(),panel.getImage().getHeight());
+				temp.setVisible(true);
+				temp.SetID(1);
+				temp.addWindowListener(new WindowListener() {
+					
+					@Override
+					public void windowOpened(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowIconified(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeiconified(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeactivated(WindowEvent e) {
+						// TODO Auto-generated method stub
+						int[] result = temp.GetResult();
+						if(result != null)
+						ShowImage(result, temp.GetDesWidth(), temp.GetDesHeight());
+					}
+					
+					@Override
+					public void windowClosing(WindowEvent e) {
+						// TODO Auto-generated method stub
+					}
+					
+					@Override
+					public void windowClosed(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowActivated(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+				});
+			}
+		});
+		menuItem_BL.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				MyJDialog temp = new MyJDialog(GetImageRGBArray(panel.getImage()),panel.getImage().getWidth(),panel.getImage().getHeight());
+				temp.setVisible(true);
+				temp.SetID(2);
+				temp.addWindowListener(new WindowListener() {
+					
+					@Override
+					public void windowOpened(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowIconified(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeiconified(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeactivated(WindowEvent e) {
+						// TODO Auto-generated method stub
+						int[] result = temp.GetResult();
+						if(result != null)
+						ShowImage(result, temp.GetDesWidth(), temp.GetDesHeight());
+					}
+					
+					@Override
+					public void windowClosing(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowClosed(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowActivated(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+				});
+			}
+		});
+	}
+	
+	public void addGreyItem(JMenu menu) {
+		JMenuItem menuItem_1 = new JMenuItem("方法1");
+		JMenuItem menuItem_2 = new JMenuItem("方法2");
+		menu.add(menuItem_1);
+		menu.add(menuItem_2);
+		menuItem_1.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				int[] result = null;
+				BufferedImage img = panel.getImage();
+				if(img != null) {
+					result = GetImageRGBArray(panel.getImage());
+					int w = img.getWidth();
+					int h = img.getHeight();
+					ShowGreyImage(result, w, h);
+				}
+			}
+		});
+		menuItem_2.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				BufferedImage img = panel.getImage();
+				if(img != null) {
+					int[] result = greyMethod.Method1(GetImageRGBArray(img), img.getWidth(), img.getHeight());
+					ShowImage(result, img.getWidth(), img.getHeight());
+				}
+			}
+		});
+	}
+	
+	public void addSpaceProItem(JMenu menu) {
+		JMenuItem menuItem_HE = new JMenuItem("直方图均衡化");
+		JMenuItem menuItem_AF = new JMenuItem("均值滤波");
+		JMenuItem menuItem_LF = new JMenuItem("拉普拉斯滤波");
+		JMenuItem menuItem_HBF = new JMenuItem("高提升滤波");
+		JMenuItem menuItem_GDI1 = new JMenuItem("灰度色彩抖动1");
+		JMenuItem menuItem_CDI1 = new JMenuItem("Floyd–Steinberg色彩抖动");
+		JMenuItem menuItem_CDI2 = new JMenuItem("bayer色彩抖动");
+		JMenuItem menuItem_HD = new JMenuItem("sobel水平边缘检测");
+		JMenuItem menuItem_VD = new JMenuItem("sobel垂直边缘检测");
+		JMenuItem menuItem_GS = new JMenuItem("高斯模糊");
+		JMenuItem menuItem_Canny = new JMenuItem("Canny边缘检测算法");
+		menu.add(menuItem_HE);
+		menu.add(menuItem_AF);
+		menu.add(menuItem_LF);
+		menu.add(menuItem_HBF);
+		menu.add(menuItem_GDI1);
+		menu.add(menuItem_CDI1);
+		menu.add(menuItem_CDI2);
+		menu.add(menuItem_HD);
+		menu.add(menuItem_VD);
+		menu.add(menuItem_GS);
+		menu.add(menuItem_Canny);
+		menuItem_HE.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				BufferedImage img = panel.getImage();
+				if(img != null) {
+					MyJDialog1 temp = new MyJDialog1();
+					int[] result = spaceProcess.HistogramEQ(GetImageRGBArray(img), img.getWidth(), img.getHeight());
+					temp.SetIniImage(img);
+					temp.SetIniHistogram(planeHistogram.paintPlaneHistogram("原图", spaceProcess.GetIniPicCount()));
+					ShowImage(result, img.getWidth(), img.getHeight());
+					temp.SetProImage(panel.getImage());
+					temp.SetProHistogram(planeHistogram.paintPlaneHistogram("均衡化", spaceProcess.GetProcessCount()));
+					temp.setVisible(true);
+					temp.Show();
+				}
+			}
+		});
+		menuItem_AF.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				MyJDialog2 temp = new MyJDialog2("请输入方形均值滤波器大小");
+				temp.setVisible(true);
+				temp.addWindowListener(new WindowListener() {
+					
+					@Override
+					public void windowOpened(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowIconified(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeiconified(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeactivated(WindowEvent e) {
+						// TODO Auto-generated method stub
+						int Size = temp.GetSize();
+						if(Size > 0) {
+							BufferedImage img = panel.getImage();
+							if(img != null) {
+								int[] result = spaceProcess.filterEQ(GetImageRGBArray(img), img.getWidth(), img.getHeight(), Size);
+								ShowImage(result, img.getWidth(), img.getHeight());
+							}
+						}
+					}
+					
+					@Override
+					public void windowClosing(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowClosed(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowActivated(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+				});
+			}
+		});
+		menuItem_LF.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				BufferedImage img = panel.getImage();
+				if(img != null) {
+					int[] result = spaceProcess.filterLaplacian(GetImageRGBArray(img), img.getWidth(), img.getHeight());
+					ShowImage(result, img.getWidth(), img.getHeight());
+				}
+			}
+		});
+		menuItem_HBF.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				MyJDialog2 temp = new MyJDialog2("请输入方形均值滤波器大小");
+				temp.setVisible(true);
+				temp.addWindowListener(new WindowListener() {
+					
+					@Override
+					public void windowOpened(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowIconified(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeiconified(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeactivated(WindowEvent e) {
+						// TODO Auto-generated method stub
+						int Size = temp.GetSize();
+						if(Size > 0) {
+							BufferedImage img = panel.getImage();
+							if(img != null) {
+								int[] result = spaceProcess.highBoostfiltering(GetImageRGBArray(img), img.getWidth(), img.getHeight(), Size);
+								ShowImage(result, img.getWidth(), img.getHeight());
+							}
+						}
+					}
+					
+					@Override
+					public void windowClosing(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowClosed(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowActivated(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+				});
+			}
+		});
+		menuItem_GDI1.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				BufferedImage img = panel.getImage();
+				if(img != null) {
+					int[] result = spaceProcess.GreyDithering(GetImageRGBArray(img), img.getWidth(), img.getHeight());
+					ShowImage(result, img.getWidth(), img.getHeight());
+				}
+			}
+		});
+		menuItem_CDI1.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				MyJDialog2 temp = new MyJDialog2("请输入抖动颜色级别");
+				temp.setVisible(true);
+				temp.addWindowListener(new WindowListener() {
+					
+					@Override
+					public void windowOpened(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowIconified(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeiconified(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeactivated(WindowEvent e) {
+						// TODO Auto-generated method stub
+						int Size = temp.GetSize();
+						if(Size > 0) {
+							BufferedImage img = panel.getImage();
+							if(img != null) {
+								int[] result = spaceProcess.FSDithering(GetImageRGBArray(img), img.getWidth(), img.getHeight(), Size);
+								ShowImage(result, img.getWidth(), img.getHeight());
+							}
+						}
+					}
+					
+					@Override
+					public void windowClosing(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowClosed(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowActivated(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+				});
+			}
+		});
+		menuItem_CDI2.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				BufferedImage img = panel.getImage();
+				if(img != null) {
+					int[] result = spaceProcess.bayerDithering(GetImageRGBArray(img), img.getWidth(), img.getHeight(), 2);
+					ShowImage(result, img.getWidth(), img.getHeight());
+				}
+			}
+		});
+		menuItem_HD.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				BufferedImage img = panel.getImage();
+				if(img != null) {
+					int[] result = spaceProcess.HorizonDetect(GetImageRGBArray(img), img.getWidth(), img.getHeight());
+					ShowImage(result, img.getWidth(), img.getHeight());
+				}
+			}
+		});
+		menuItem_VD.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				BufferedImage img = panel.getImage();
+				if(img != null) {
+					int[] result = spaceProcess.VerticalDetect(GetImageRGBArray(img), img.getWidth(), img.getHeight());
+					ShowImage(result, img.getWidth(), img.getHeight());
+				}
+			}
+		});
+		menuItem_GS.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				MyJDialog3 temp = new MyJDialog3("请输入高斯模糊半径");
+				temp.setVisible(true);
+				temp.addWindowListener(new WindowListener() {
+					
+					@Override
+					public void windowOpened(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowIconified(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeiconified(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeactivated(WindowEvent e) {
+						// TODO Auto-generated method stub
+						double Size = temp.GetSize();
+						if(Size > 0) {
+							BufferedImage img = panel.getImage();
+							if(img != null) {
+								int[] result = spaceProcess.GaussianBlur(GetImageRGBArray(img), img.getWidth(), img.getHeight(), Size);
+								ShowImage(result, img.getWidth(), img.getHeight());
+							}
+						}
+					}
+					
+					@Override
+					public void windowClosing(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowClosed(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowActivated(WindowEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+				});
+			}
+		});
+		menuItem_Canny.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				BufferedImage img = panel.getImage();
+				if(img != null) {
+					int[] result = spaceProcess.CannyDetect(GetImageRGBArray(img), img.getWidth(), img.getHeight());
+					ShowImage(result, img.getWidth(), img.getHeight());
+				}
+			}
+		});
+	}
+	
+	public void addFreQProItem(JMenu menu) {
+		JMenuItem menuItem_DFT = new JMenuItem("DFT");
+		JMenuItem menuItem_IDFT = new JMenuItem("IDFT");
+		JMenuItem menuItem_FFT = new JMenuItem("FFT");
+		JMenuItem menuItem_IFFT = new JMenuItem("IFFT");
+		menu.add(menuItem_DFT);
+		menu.add(menuItem_IDFT);
+		menu.add(menuItem_FFT);
+		menu.add(menuItem_IFFT);
+		menuItem_DFT.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				BufferedImage img = panel.getImage();
+				if(img != null) {
+					int[] result = frequencyPro.DFT2d(GetImageRGBArray(img), img.getWidth(), img.getHeight());
+					ShowImage(result, img.getWidth(), img.getHeight());
+				}
+			}
+		});
+		
+		menuItem_IDFT.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				BufferedImage img = panel.getImage();
+				if(img != null) {
+					int[] result = frequencyPro.IDFT2d();
+					ShowImage(result, img.getWidth(), img.getHeight());
+				}
+			}
+		});
+		
+		menuItem_FFT.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(ToFFT) {
+					BufferedImage img = panel.getImage();
+					if(img != null) {
+						int[] result = frequencyPro.FFT2d(GetImageRGBArray(img), img.getWidth(), img.getHeight());
+						int w = frequencyPro.GetNewWidth();
+						int h = frequencyPro.GetNewHeight();
+						ShowImage(result, w, h);
+						ToFFT = false;
+					}
+				}
+			}
+		});
+		
+		menuItem_IFFT.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(!ToFFT) {
+					int[] result = frequencyPro.IFFT2d();
+					int w = frequencyPro.GetIniWidth();
+					int h = frequencyPro.GetIniHeight();
+					ShowImage(result, w, h);
+					frequencyPro.InitialData();
+					ToFFT = true;
+				}
+			}
+		});
+		
+	}
+	
+	public int[] GetImageRGBArray(BufferedImage img) {
+		int width = img.getWidth();
+		int height = img.getHeight();
+		
+		int[] RGBArray = new int[width * height];
+		
+		for(int i = 0; i < height; i++) {
+			for(int j = 0; j < width; j++) {
+				RGBArray[width * i + j] = img.getRGB(j, i);
+			}
+		}
+		return RGBArray;
+	}
+	
+	public void ShowImage(int[] result, int width, int height) {
+		BufferedImage TempImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		for(int i = 0; i < height; i++) {
+			for(int j = 0; j < width; j++) {
+				TempImage.setRGB(j, i, result[width * i + j]);
+			}
+		}
+		panel.setImage(TempImage);
+		panel.getGraphics().clearRect(0, 0, panel.getWidth(), panel.getHeight());
+		panel.paint(getGraphics());
+		repaint();
+	}
+	
+	public void ShowGreyImage(int[] result, int width, int height) {
+		BufferedImage TempImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+		for(int i = 0; i < height; i++) {
+			for(int j = 0; j < width; j++) {
+				TempImage.setRGB(j, i, result[i * width + j]);
+			}
+		}
+		panel.setImage(TempImage);
+		panel.getGraphics().clearRect(0, 0, panel.getWidth(), panel.getHeight());
+		panel.paint(getGraphics());
+		repaint();
+	}
+}

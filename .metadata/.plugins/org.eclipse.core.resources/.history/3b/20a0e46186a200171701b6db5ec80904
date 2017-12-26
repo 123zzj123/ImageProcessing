@@ -1,0 +1,24 @@
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+
+import javax.swing.JPanel;
+
+public class MyJpanel extends JPanel{
+	private BufferedImage image = null;
+	public void paint(Graphics g) {
+		super.paint(getGraphics());
+		try {
+			g.drawImage(image, 0, 0, null);
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+	}
+	public void setImage(BufferedImage img) {
+		image = img;
+	}
+	
+	public BufferedImage getImage() {
+		return image;
+	}
+}

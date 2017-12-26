@@ -1,0 +1,67 @@
+
+public class Scale {
+	public int[] CopyScale(int []IniPixelsData, int SrcWidth, int SrcHeight, int DesWidth, int DesHeight) {
+		int[][][] input3DData = ProcessPixelData.processOneToThreeDeminsion(IniPixelsData,SrcWidth,SrcHeight);
+		int[][][] outputThreeDeminsionData = new int[DesHeight][DesWidth][4];
+		
+		float rowRatio = ((float)SrcHeight) / ((float)DesHeight);
+		float colRatio = ((float)SrcWidth) / ((float)DesWidth);
+		for(int i = 0 ; i < DesHeight; i++) {
+			int r = (int)(i * rowRatio);
+			for(int j = 0; j < DesWidth; j++) {
+				int c = (int)(j * colRatio);
+				for(int k = 0; k < 4; k++) {
+					outputThreeDeminsionData[i][j][k] = input3DData[r][c][k];
+				}
+			}
+		}
+		
+		return ProcessPixelData.convertToOneDim(outputThreeDeminsionData, DesWidth, DesHeight);
+	}
+	
+	public int[] BilineInterpolationScale(int []IniPixelsData, int SrcWidth, int SrcHeight, int DesWidth, int DesHeight) {
+		int[][][] input3DData = ProcessPixelData.processOneToThreeDeminsion(IniPixelsData,SrcWidth,SrcHeight);
+		int[][][] outputThreeDeminsionData = new int[DesHeight][DesWidth][4];
+
+		float rowRatio = ((float)SrcHeight) / ((float)DesHeight);
+		float colRatio = ((float)SrcWidth) / ((float)DesWidth);
+		for(int i = 0 ; i < DesHeight; i++) {
+			int r = (int)(i * rowRatio);
+			double t = i * rowRatio - r;
+			for(int j = 0; j < DesWidth; j++) {
+				int c = (int)(j * colRatio);
+				double u = j * colRatio - c;
+				
+				double coffiecent1 = (1.0d - t) * (1.0d - u);
+				double coffiecent2 = (t) * (1.0d - u);
+				double coffiecent3 = t * u;
+				double coffiecent4 = (1.0d - t) * u;
+				
+				for(int k = 0; k < 4; k++) {
+					outputThreeDeminsionData[i][j][k] = (int)(
+							coffiecent1 * input3DData[getClip((int)r, SrcHeight - 1, 0)][getClip((int)c, SrcWidth - 1, 0)][k] +
+							coffiecent2 * input3DData[getClip((int)(r + 1), SrcHeight - 1, 0)][getClip((int)c, SrcWidth - 1, 0)][k] +
+							coffiecent3 * input3DData[getClip((int)(r + 1), SrcHeight - 1, 0)][getClip((int)(c + 1),SrcWidth - 1, 0)][k] +
+							coffiecent4 * input3DData[getClip((int)r, SrcHeight - 1, 0)][getClip((int)(c + 1), SrcWidth - 1, 0)][k]
+						);
+				}
+			}
+		}
+		
+		return ProcessPixelData.convertToOneDim(outputThreeDeminsionData, DesWidth, DesHeight);
+	}
+	
+	public int[] bicubicScale(int []IniPixelsData, int SrcWidth, int SrcHeight, int DesWidth, int DesHeight) {
+		int[][][] input3DData = ProcessPixelData.processOneToThreeDeminsion(IniPixelsData,SrcWidth,SrcHeight);
+		int[][][] outputThreeDeminsionData = new int[DesHeight][DesWidth][4];
+		
+		float rowRatio = ((float)SrcHeight) / ((float)DesHeight);
+		float colRatio = ((float)SrcWidth) / ((float)DesWidth);
+		
+		return ProcessPixelData.convertToOneDim(outputThreeDeminsionData, DesWidth, DesHeight);
+	}
+	
+	private int getClip(int x, int max, int min) {
+		return x > max ? max : x < min ? min : x;
+	}
+}

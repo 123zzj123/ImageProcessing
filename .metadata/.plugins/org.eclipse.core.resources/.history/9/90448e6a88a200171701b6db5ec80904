@@ -1,0 +1,172 @@
+import java.awt.Panel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+
+public class ImageProcessView extends JFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	public BufferedImage Image;
+	private MyJpanel panel;
+	private JFileChooser chooser;
+	private GetChanelPic getChanelPic;
+	private static final int DEFAULT_WIDTH = 500;
+	private static final int DEFAULT_HEIGHT = 500;
+	private String imagePath;
+	private String fileName;
+	public ImageProcessView() {
+		setTitle("Image Process");
+		setSize(DEFAULT_WIDTH,DEFAULT_HEIGHT);
+		
+		getChanelPic = new GetChanelPic();
+		
+		chooser = new JFileChooser();
+		chooser.setCurrentDirectory(new File("."));
+		
+		JMenuBar menubar = new JMenuBar();
+		setJMenuBar(menubar);
+		
+		addFileMenu(menubar);
+		
+		panel = new MyJpanel();
+		add(panel);
+	}
+	
+	public void addFileMenu(JMenuBar menubar) {
+		String menustr[] = {"文件","提取","缩放"};
+		JMenu menu[] = new JMenu[menustr.length];
+		for(int i = 0; i < menustr.length; i++) {
+			menu[i] = new JMenu(menustr[i]);
+			menubar.add(menu[i]);
+		}
+		JMenuItem menuitem_open = new JMenuItem("打开");
+		JMenuItem menuitem_save = new JMenuItem("保存");
+		JMenuItem menuitem_exit = new JMenuItem("退出");
+		menu[0].add(menuitem_open);
+		menu[0].add(menuitem_save);
+		menu[0].addSeparator();//添加分割线
+		menu[0].add(menuitem_exit);
+		menuitem_open.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				int result = chooser.showOpenDialog(null);
+				if(result == JFileChooser.APPROVE_OPTION) {
+					String name = chooser.getSelectedFile().getPath();
+					imagePath = name.substring(0, name.lastIndexOf("\\") + 1);
+					fileName = name.substring(name.lastIndexOf("\\"));
+					File file = new File(name);
+					try {
+						Image = ImageIO.read(file);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					panel.setImage(Image);
+					panel.paint(getGraphics());
+				}
+			}
+		});
+		menuitem_save.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				int result = chooser.showSaveDialog(null);
+				if(result == JFileChooser.APPROVE_OPTION) {
+					String name = chooser.getSelectedFile().getPath();
+					if(name.length() <= 4 ||name.substring(name.length()-4) != ".png") {
+						name += ".png";
+					}
+					File file = new File(name);
+					try {
+						ImageIO.write(panel.getImage(), "png", file);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+			}
+		});
+		menuitem_exit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				System.exit(0);
+			}
+		});
+		
+		JMenuItem menuitem_red = new JMenuItem("红");
+		JMenuItem menuitem_green = new JMenuItem("绿");
+		JMenuItem menuitem_blue = new JMenuItem("蓝");
+		menu[1].add(menuitem_red);
+		menu[1].add(menuitem_green);
+		menu[1].add(menuitem_blue);
+		menuitem_red.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				int[] result = getChanelPic.GetRedChanel(GetImageRGBArray(Image), Image.getWidth(), Image.getHeight());
+				ShowImage(result, Image.getWidth(), Image.getHeight());
+			}
+		});
+		menuitem_green.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				int[] result = getChanelPic.GetGreenChanel(GetImageRGBArray(Image), Image.getWidth(), Image.getHeight());
+				ShowImage(result, Image.getWidth(), Image.getHeight());
+			}
+		});
+		menuitem_blue.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				int[] result = getChanelPic.GetBlueChanel(GetImageRGBArray(Image), Image.getWidth(), Image.getHeight());
+				ShowImage(result, Image.getWidth(), Image.getHeight());
+			}
+		});
+	}
+	
+	public int[] GetImageRGBArray(BufferedImage img) {
+		int width = img.getWidth();
+		int height = img.getHeight();
+		
+		int[] RGBArray = new int[width * height];
+		
+		for(int i = 0; i < height; i++) {
+			for(int j = 0; j < width; j++) {
+				RGBArray[width * i + j] = img.getRGB(j, i);
+			}
+		}
+		return RGBArray;
+	}
+	
+	public void ShowImage(int[] result, int width, int height) {
+		BufferedImage TempImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		for(int i = 0; i < height; i++) {
+			for(int j = 0; j < width; j++) {
+				TempImage.setRGB(j, i, result[width * i + j]);
+			}
+		}
+		panel.setImage(TempImage);
+		panel.paint(getGraphics());
+	}
+}

@@ -1,0 +1,40 @@
+
+public class GetChanelPic {
+	
+	public int[] GetRedChanel(int[] IniPixelsData, int width, int height) {
+		int[][][] input3DData = processOneToThreeDeminsion(IniPixelsData,width,height);
+		for(int i = 0; i < width; i++) {
+			for(int j = 0; j < height; j++) {
+				input3DData[i][j][2] = 0;
+				input3DData[i][j][3] = 0;
+			}
+		}
+		return convertToOneDim(input3DData, width, height);
+	}
+	
+	private int[][][] processOneToThreeDeminsion(int[] data, int imgRows, int imgCols) {
+		int [][][] tempData = new int[imgRows][imgCols][4];
+		for(int row = 0; row < imgRows; row++) {
+			for(int col = 0; col < imgCols; col++) {
+				tempData[row][col][0] = (data[imgCols * row + col]>>24) & 0xFF;//alpha
+				tempData[row][col][1] = (data[imgCols * row + col]>>16) & 0xFF;//red
+				tempData[row][col][2] = (data[imgCols * row + col]>>8) & 0xFF;//green
+				tempData[row][col][3] = (data[imgCols * row + col]) & 0xFF;//blue
+			}
+		}
+		return tempData;
+	}
+	
+	private int[] convertToOneDim(int[][][] data, int imgRows, int imgCols) {
+		int[] tempData = new int[imgRows * imgCols];
+		for(int row = 0; row < imgRows; row++) {
+			for(int col = 0; col < imgCols; col++) {
+				tempData[imgCols * row + col] = ((data[row][col][0]<<24) & 0xFF000000)
+						| ((data[row][col][1]<<16) & 0x00FF0000)
+						| ((data[row][col][2]<<8) & 0x0000FF00)
+						| ((data[row][col][3]) & 0x000000FF);
+			}
+		}
+		return tempData;
+	}
+}
