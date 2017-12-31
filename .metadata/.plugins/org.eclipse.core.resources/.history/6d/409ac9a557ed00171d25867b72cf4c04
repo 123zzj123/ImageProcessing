@@ -225,7 +225,7 @@ public class ImgCompress {
 		double[][] PiC2_Y = GETYChanel(AnotherPic, width, height);//获取Y通道
 		double c1 = Math.pow(0.01 * 255, 2);
 		double c2 = Math.pow(0.03 * 255, 2);
-		//通过高斯加权计算均值方差协方差
+		//通过高斯模糊计算均值方差协方差
 		double[][] ave1 = spaceProcess.GaussianBlur2(PiC1_Y, width, height, 11, 1.5);
 		double[][] ave2 = spaceProcess.GaussianBlur2(PiC2_Y, width, height, 11, 1.5);
 		double[][] ave12 = ComputeProduct(ave1, ave2, width, height);

@@ -209,7 +209,6 @@ public class ImgCompress {
 		SNR = 10 * Math.log10(sum1/sum2);
 	}
 	
-	//计算PSNR
 	public double ComputePSNR(int[] OriPic, int[] AnotherPic, int width, int height) {
 		double[][] PiC1_Y = GETYChanel(OriPic,width,height);
 		double[][] PIC2_Y = GETYChanel(AnotherPic, width, height);
@@ -218,14 +217,12 @@ public class ImgCompress {
 		return PSNR;
 	}
 	
-	//计算SSIM
 	public double ComputeSSIM(int[] OriPic, int[] AnotherPic, int width, int height) {
 		SpaceProcess spaceProcess = new SpaceProcess();
-		double[][] PiC1_Y = GETYChanel(OriPic,width,height);//获取Y通道
-		double[][] PiC2_Y = GETYChanel(AnotherPic, width, height);//获取Y通道
+		double[][] PiC1_Y = GETYChanel(OriPic,width,height);
+		double[][] PiC2_Y = GETYChanel(AnotherPic, width, height);
 		double c1 = Math.pow(0.01 * 255, 2);
 		double c2 = Math.pow(0.03 * 255, 2);
-		//通过高斯加权计算均值方差协方差
 		double[][] ave1 = spaceProcess.GaussianBlur2(PiC1_Y, width, height, 11, 1.5);
 		double[][] ave2 = spaceProcess.GaussianBlur2(PiC2_Y, width, height, 11, 1.5);
 		double[][] ave12 = ComputeProduct(ave1, ave2, width, height);
@@ -244,7 +241,15 @@ public class ImgCompress {
 				sum += ((2*ave12[i][j]+c1)*(2*covar[i][j]+c2))/((ave1[i][j] + ave2[i][j] + c1) * (var1[i][j] + var2[i][j] + c2));
 			}
 		}
-		//计算SSIM均值
+		/*
+		double ave1 = ComputeAVE(PiC1_Y, width, height);
+		double ave2 = ComputeAVE(PiC2_Y, width, height);
+		double var1 = ComputeVAR(PiC1_Y, width, height, ave1);
+		double var2 = ComputeVAR(PiC2_Y, width, height, ave2);
+		double covar = ComputeCOVAR(PiC1_Y, PiC2_Y, ave1, ave2, width, height);
+		double SSIM = ((2*ave1*ave2 + c1) * (2*covar + c2)) / ((Math.pow(ave1, 2) + Math.pow(ave2, 2) + c1) * (Math.pow(var1, 2) + Math.pow(var2, 2) + c2));
+		return SSIM;
+		*/
 		double SSIM = sum/(width*height*1.0);
 		return SSIM;
 	}

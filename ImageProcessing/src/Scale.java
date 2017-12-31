@@ -1,5 +1,6 @@
 
 public class Scale {
+	//拷贝插值，最近邻插值
 	public int[] CopyScale(int []IniPixelsData, int SrcWidth, int SrcHeight, int DesWidth, int DesHeight) {
 		int[][][] input3DData = ProcessPixelData.processOneToThreeDeminsion(IniPixelsData,SrcWidth,SrcHeight);
 		int[][][] outputThreeDeminsionData = new int[DesHeight][DesWidth][4];
@@ -19,6 +20,7 @@ public class Scale {
 		return ProcessPixelData.convertToOneDim(outputThreeDeminsionData, DesWidth, DesHeight);
 	}
 	
+	//双线性插值
 	public int[] BilineInterpolationScale(int []IniPixelsData, int SrcWidth, int SrcHeight, int DesWidth, int DesHeight) {
 		int[][][] input3DData = ProcessPixelData.processOneToThreeDeminsion(IniPixelsData,SrcWidth,SrcHeight);
 		int[][][] outputThreeDeminsionData = new int[DesHeight][DesWidth][4];
@@ -51,6 +53,7 @@ public class Scale {
 		return ProcessPixelData.convertToOneDim(outputThreeDeminsionData, DesWidth, DesHeight);
 	}
 	
+	//双三次插值
 	public int[] bicubicScale(int []IniPixelsData, int SrcWidth, int SrcHeight, int DesWidth, int DesHeight) {
 		int[][][] input3DData = ProcessPixelData.processOneToThreeDeminsion(IniPixelsData,SrcWidth,SrcHeight);
 		int[][][] outputData = new int[DesHeight][DesWidth][4];

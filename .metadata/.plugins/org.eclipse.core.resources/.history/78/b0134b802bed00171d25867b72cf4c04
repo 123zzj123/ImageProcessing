@@ -489,7 +489,7 @@ public class ImageProcessView extends JFrame {
 						if(Size > 0) {
 							BufferedImage img = panel.getImage();
 							if(img != null) {
-								int[] result = spaceProcess.GaussianBlur(GetImageRGBArray(img), img.getWidth(), img.getHeight(), 5, Size);
+								int[] result = spaceProcess.GaussianBlur(GetImageRGBArray(img), img.getWidth(), img.getHeight(), 3, Size);
 								ShowImage(result, img.getWidth(), img.getHeight());
 							}
 						}

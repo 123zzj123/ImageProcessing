@@ -1191,19 +1191,10 @@ public class SpaceProcess {
 	//产生高斯矩阵
 	public double[][] GenerateGSMatrix(int len, Double var) {
 		double[][] matrix = new double[len][len];
-		double sum = 0.0;
 		double A = 1 / (2 * Math.PI * var * var);
-		for(int i = 0; i < len; i++) {
-			int x = i - len/2;
-			for(int j = 0; j < len; j++) {
-				int y = j - len/2;
-				matrix[i][j] = A * Math.pow(Math.E, (-1)*(x*x+y*y)/(2*var*var));
-				sum += matrix[i][j];
-			}
-		}
-		for(int i = 0; i < len; i++) {
-			for(int j = 0; j < len; j++) {
-				matrix[i][j] /= sum;
+		for(int i = -len/2; i <= len/2; i++) {
+			for(int j = -len/2; j <= len/2; j++) {
+				matrix[i+len/2][j+len/2] = A * Math.pow(Math.E, (-1)*(i*i+j*j)/(2*var*var));
 			}
 		}
 		return matrix;
