@@ -973,7 +973,7 @@ public class SpaceProcess {
 	//Ë®Æ½±ßÔµ¼ì²â
 	public int[] HorizonDetect(int[] IniPixelsData, int width, int height) {
 		int[][][] input3DData = ProcessPixelData.processOneToThreeDeminsion(IniPixelsData,width,height);
-		int[][] Xfilter = {{-1,-2,-1},{0,0,0},{1,2,1}};
+		int[][] Xfilter = {{-1,0,1},{-2,0,2},{-1,0,1}};
 		
 		filter = Xfilter;
 		
@@ -1013,7 +1013,7 @@ public class SpaceProcess {
 	//´¹Ö±±ßÔµ¼ì²â
 	public int[] VerticalDetect(int[] IniPixelsData, int width, int height) {
 		int[][][] input3DData = ProcessPixelData.processOneToThreeDeminsion(IniPixelsData,width,height);
-		int[][] Xfilter = {{-1,0,1},{-2,0,2},{-1,0,1}};
+		int[][] Xfilter = {{-1,-2,-1},{0,0,0},{1,2,1}};
 		
 		filter = Xfilter;
 		
