@@ -1,4 +1,4 @@
-*.xml linguist-language=java
-*.json linguist-language=java
-*.prefs linguist-language=java
-*.* linguist-language=java
+*.xml linguist-language=Java
+*.json linguist-language=Java
+*.prefs linguist-language=Java
+*.* linguist-language=Java
