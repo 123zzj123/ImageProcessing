@@ -1,0 +1,4 @@
+*.xml linguist-language=java
+*.json linguist-language=java
+*.prefs linguist-language=java
+*.* linguist-language=java
